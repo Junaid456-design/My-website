@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Submit Device Location</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    #output {
+      margin-top: 20px;
+      font-size: 18px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Device Location Tracker</h2>
+  <button onclick="getLocation()">Submit Location</button>
+
+  <div id="output"></div>
+
+  <script>
+    function getLocation() {
+      const output = document.getElementById('output');
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          position => {
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+
+            output.innerHTML = `
+              <p><strong>Latitude:</strong> ${latitude}</p>
+              <p><strong>Longitude:</strong> ${longitude}</p>
+              <p>Sending data to Google Sheet...</p>
+            `;
+
+            // Send data to Google Apps Script Web App
+            fetch("https://script.google.com/macros/s/AKfycbzL2_zeg94ZFqRNIYFbr1FIf4z3gTHoZCEw_ccsmNclwnYWzCa8DmcWT0x3JZSDMtpB/exec", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                latitude: latitude,
+                longitude: longitude
+              }),
+            })
+            .then(response => response.text())
+            .then(data => {
+              output.innerHTML += `<p><strong>Server Response:</strong> ${data}</p>`;
+            })
+            .catch(error => {
+              output.innerHTML += `<p style="color:red;"><strong>Error:</strong> ${error.message}</p>`;
+            });
+          },
+          error => {
+            output.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`;
+          }
+        );
+      } else {
+        output.innerHTML = "<p>Geolocation is not supported by this browser.</p>";
+      }
+    }
+  </script>
+
+</body>
+</html>
